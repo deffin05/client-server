@@ -7,7 +7,7 @@ public class Encoder {
 
     }
 
-    public ByteBuffer encode(Package pkg) {
+    public byte[] encode(Package pkg) {
         int msgLength = pkg.getMessage().getMessage().getBytes().length + 4 + 4;
         int length = 1 + 1 + 8 + 4 + 2 + 2 + msgLength;
         ByteBuffer buffer = ByteBuffer.allocate(length);
@@ -26,7 +26,6 @@ public class Encoder {
         short msgCrc = Crc16.calculateCrc(buffer.array(), 16, msgLength);
         buffer.putShort(msgCrc);
 
-        buffer.flip();
-        return buffer;
+        return buffer.array();
     }
 }

@@ -10,12 +10,29 @@ class EncoderTest {
     @Test
     void testEncode() {
         Encoder encoder = new Encoder();
-        Message message = new Message(1, 86, "Hello, World!");
+        Message message = new Message(1, 86, "test123");
         Package pkg = new Package((byte) 36, 123456789L, message);
 
-        ByteBuffer buffer = encoder.encode(pkg);
-        // You can add assertions here to verify the contents of the buffer
+        byte[] encoded = encoder.encode(pkg);
+        ByteBuffer buffer = ByteBuffer.allocate(encoded.length);
 
-        assertEquals(buffer.get(0), (byte) 0x13);
+        buffer.put((byte) 0x13);
+        buffer.put((byte) 36);
+        buffer.putLong(123456789L);
+
+        int msgLength = message.getMessage().getBytes().length + 4 + 4;
+        buffer.putInt(msgLength);
+
+        short infoCrc = Crc16.calculateCrc(buffer.array(), 0, 14);
+        buffer.putShort(infoCrc);
+
+        buffer.putInt(1);
+        buffer.putInt(86);
+        buffer.put(message.getMessage().getBytes());
+
+        short msgCrc = Crc16.calculateCrc(buffer.array(), 16, msgLength);
+        buffer.putShort(msgCrc);
+
+        assertArrayEquals(encoded, buffer.array());
     }
 }
