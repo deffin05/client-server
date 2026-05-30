@@ -3,10 +3,6 @@ package com.example;
 import java.nio.ByteBuffer;
 
 public class Encoder {
-    public Encoder() {
-
-    }
-
     public byte[] encode(Package pkg) {
         int msgLength = pkg.getMessage().getMessage().getBytes().length + 4 + 4;
         int length = 1 + 1 + 8 + 4 + 2 + 2 + msgLength;
