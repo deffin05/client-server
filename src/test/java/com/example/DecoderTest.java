@@ -2,10 +2,11 @@ package com.example;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class DecoderTest {
-
+    private Decoder decoder;
     private final byte[] VALID_ARRAY = new byte[]{
             0x13,                           // Magic number
             62,                             // Source
@@ -18,21 +19,45 @@ public class DecoderTest {
             0x4D, 0x17                      // Message CRC
     };
 
+    @BeforeEach
+    void setup() {
+        decoder = new Decoder();
+    }
+
     @Test
     void testDecode() {
-        Decoder decoder = new Decoder();
-        Message expectedMessage = new Message(3, 127, "321test");
-        Package expectedPackage = new Package((byte) 62, 100L, expectedMessage);
-
-
         Package decodedPackage = assertDoesNotThrow(() -> decoder.decode(VALID_ARRAY));
         Message decodedMessage = decodedPackage.getMessage();
 
-        assertEquals(expectedPackage.getbSrc(), decodedPackage.getbSrc());
-        assertEquals(expectedPackage.getbPktId(), decodedPackage.getbPktId());
+        assertEquals(62, decodedPackage.getbSrc());
+        assertEquals(100, decodedPackage.getbPktId());
 
-        assertEquals(expectedMessage.getcType(), decodedMessage.getcType());
-        assertEquals(expectedMessage.getbUserId(), decodedMessage.getbUserId());
-        assertEquals(expectedMessage.getMessage(), decodedMessage.getMessage());
+        assertEquals(3, decodedMessage.getcType());
+        assertEquals(127, decodedMessage.getbUserId());
+        assertEquals("321test", decodedMessage.getMessage());
+    }
+
+    @Test
+    void testDecodeInvalidMagicNumber() {
+        byte[] invalid_array = VALID_ARRAY.clone();
+        invalid_array[0] = 0x3F;
+
+        assertThrows(Exception.class, () -> decoder.decode(invalid_array));
+    }
+
+    @Test
+    void testDecodeInvalidInfoCRC() {
+        byte[] invalid_array = VALID_ARRAY.clone();
+        invalid_array[14] = 0;
+
+        assertThrows(Exception.class, () -> decoder.decode(invalid_array));
+    }
+
+    @Test
+    void testDecodeInvalidMessageCRC() {
+        byte[] invalid_array = VALID_ARRAY.clone();
+        invalid_array[invalid_array.length - 1] = 0;
+
+        assertThrows(Exception.class, () -> decoder.decode(invalid_array));
     }
 }
