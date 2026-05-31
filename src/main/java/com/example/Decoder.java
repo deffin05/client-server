@@ -30,7 +30,7 @@ public class Decoder {
 
         byte[] messageArray = new byte[msgLength - 8];
         buffer.get(messageArray);
-        String message = Arrays.toString(messageArray);
+        String message = new String(messageArray);
 
         short msgCrcReceived = buffer.getShort();
         short msgCrcCalculated = Crc16.calculateCrc(arr, 16, msgLength);
