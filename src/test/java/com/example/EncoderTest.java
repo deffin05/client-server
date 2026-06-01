@@ -2,37 +2,37 @@ package com.example;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.nio.ByteBuffer;
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class EncoderTest {
+    private Encoder encoder;
+    private final byte[] VALID_ARRAY = new byte[]{
+            0x13,                           // Magic number
+            62,                             // Source
+            0, 0, 0, 0, 0, 0, 0, 100,       // Packet id
+            0, 0, 0, 24,                    // Message length
+            0x6f, 0x34,                     // Info CRC
+            0, 0, 0, 3,                     // Message type
+            0, 0, 0, 127,                   // User id
+            81, 49, 25, -101,
+            113, 83, 12, -99,
+            -110, 112, 65, 45,
+            55, 121, -103, 46,              // Message = "321test" encrypted with AES
+            0x74, 0x05                      // Message CRC
+    };
+
+    @BeforeEach
+    void setup() {
+        encoder = new Encoder();
+    }
+
     @Test
     void testEncode() {
-        Encoder encoder = new Encoder();
-        Message message = new Message(1, 86, "test123");
-        Package pkg = new Package((byte) 36, 123456789L, message);
+        Message message = new Message(3, 127, "321test");
+        Package pkg = new Package((byte) 62, 100, message);
 
         byte[] encoded = encoder.encode(pkg);
-        ByteBuffer buffer = ByteBuffer.allocate(encoded.length);
-
-        buffer.put((byte) 0x13);
-        buffer.put((byte) 36);
-        buffer.putLong(123456789L);
-
-        int msgLength = message.getMessage().getBytes().length + 4 + 4;
-        buffer.putInt(msgLength);
-
-        short infoCrc = Crc16.calculateCrc(buffer.array(), 0, 14);
-        buffer.putShort(infoCrc);
-
-        buffer.putInt(1);
-        buffer.putInt(86);
-        buffer.put(message.getMessage().getBytes());
-
-        short msgCrc = Crc16.calculateCrc(buffer.array(), 16, msgLength);
-        buffer.putShort(msgCrc);
-
-        assertArrayEquals(encoded, buffer.array());
+        assertArrayEquals(VALID_ARRAY, encoded);
     }
 }
