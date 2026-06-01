@@ -1,7 +1,12 @@
 package com.example;
 
+import javax.crypto.*;
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Base64;
 
 public class Decoder {
     private static final byte MAGIC_NUMBER = 0x13;
@@ -30,7 +35,7 @@ public class Decoder {
 
         byte[] messageArray = new byte[msgLength - 8];
         buffer.get(messageArray);
-        String message = new String(messageArray);
+        String message = decrypt(messageArray);
 
         short msgCrcReceived = buffer.getShort();
         short msgCrcCalculated = Crc16.calculateCrc(arr, 16, msgLength);
@@ -39,5 +44,22 @@ public class Decoder {
             throw new Exception("Message CRC does not match.");
 
         return new Package(bSrc, bPktId, new Message(cType, bUserId, message));
+    }
+
+    private String decrypt(byte[] arr) {
+        String KEY_BASE64 = "3pK22raz7n2/lyedxsQP2g==";
+
+        try {
+            Cipher cipher = Cipher.getInstance("AES");
+            byte[] keyBytes = Base64.getDecoder().decode(KEY_BASE64);
+            SecretKey key = new SecretKeySpec(keyBytes, "AES");
+
+            cipher.init(Cipher.DECRYPT_MODE, key);
+
+            return new String(cipher.doFinal(arr));
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException |
+                 BadPaddingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
