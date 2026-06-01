@@ -11,12 +11,15 @@ public class DecoderTest {
             0x13,                           // Magic number
             62,                             // Source
             0, 0, 0, 0, 0, 0, 0, 100,       // Packet id
-            0, 0, 0, 15,                    // Message length
-            0x61, 0x74,                     // Info CRC
+            0, 0, 0, 24,                    // Message length
+            0x6f, 0x34,                     // Info CRC
             0, 0, 0, 3,                     // Message type
             0, 0, 0, 127,                   // User id
-            51, 50, 49, 116, 101, 115, 116, // Message = "321test"
-            0x4D, 0x17                      // Message CRC
+            81, 49, 25, -101,
+            113, 83, 12, -99,
+            -110, 112, 65, 45,
+            55, 121, -103, 46,              // Message = "321test" encrypted with AES
+            0x74, 0x05                      // Message CRC
     };
 
     @BeforeEach
