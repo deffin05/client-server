@@ -2,11 +2,12 @@ package com.example;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.example.decryptor.DefaultDecryptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class DecoderTest {
-    private Decoder decoder;
+    private DefaultDecryptor decoder;
     private final byte[] VALID_ARRAY = new byte[]{
             0x13,                           // Magic number
             62,                             // Source
@@ -24,7 +25,7 @@ public class DecoderTest {
 
     @BeforeEach
     void setup() {
-        decoder = new Decoder();
+        decoder = new DefaultDecryptor();
     }
 
     @Test

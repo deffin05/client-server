@@ -1,4 +1,7 @@
-package com.example;
+package com.example.encryptor;
+
+import com.example.Crc16;
+import com.example.Package;
 
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
@@ -7,7 +10,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
-public class Encoder {
+public class DefaultEncryptor {
     public byte[] encode(Package pkg) {
         byte[] encryptedMessage = encrypt(pkg.getMessage().getMessage());
         int msgLength = encryptedMessage.length + 4 + 4;

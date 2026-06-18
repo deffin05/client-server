@@ -2,11 +2,12 @@ package com.example;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.example.encryptor.DefaultEncryptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class EncoderTest {
-    private Encoder encoder;
+    private DefaultEncryptor encoder;
     private final byte[] VALID_ARRAY = new byte[]{
             0x13,                           // Magic number
             62,                             // Source
@@ -24,7 +25,7 @@ class EncoderTest {
 
     @BeforeEach
     void setup() {
-        encoder = new Encoder();
+        encoder = new DefaultEncryptor();
     }
 
     @Test
