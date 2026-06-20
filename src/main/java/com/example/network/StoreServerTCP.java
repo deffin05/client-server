@@ -3,13 +3,14 @@ package com.example.network;
 import com.example.NetworkPackage;
 import com.example.receiver.Receiver;
 
+import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
 
-public class StoreServerTCP implements Runnable, Receiver{
+public class StoreServerTCP implements Runnable, Receiver {
     public static final int PORT = 13285;
     private final BlockingQueue<NetworkPackage<byte[]>> outputQueue;
 
@@ -39,6 +40,7 @@ public class StoreServerTCP implements Runnable, Receiver{
             System.out.println("TCP server started: " + s);
             while (true) {
                 Socket socket = s.accept();
+                System.out.println("New connection: " + socket);
                 new TCPClientHandler(socket, outputQueue);
             }
         }
@@ -48,9 +50,11 @@ public class StoreServerTCP implements Runnable, Receiver{
 class TCPClientHandler extends Thread {
     private final Socket socket;
     private final BlockingQueue<NetworkPackage<byte[]>> outputQueue;
+    private final DataInputStream in;
 
-    TCPClientHandler(Socket socket, BlockingQueue<NetworkPackage<byte[]>> outputQueue) {
+    TCPClientHandler(Socket socket, BlockingQueue<NetworkPackage<byte[]>> outputQueue) throws IOException {
         this.socket = socket;
+        in = new DataInputStream(socket.getInputStream());
         this.outputQueue = outputQueue;
 
         start();
@@ -60,17 +64,26 @@ class TCPClientHandler extends Thread {
     @Override
     public void run() {
         try {
-            InputStream in = socket.getInputStream();
-            byte[] arr = in.readAllBytes();
-            outputQueue.put(new NetworkPackage<byte[]>(arr, new TCPConnection(socket)));
+            while (true) {
+                int requestLength = in.readInt();
+                if (requestLength == -1) {
+                    // End connection
+                    break;
+                }
+                byte[] arr = new byte[requestLength];
+                in.readFully(arr);
+                outputQueue.put(new NetworkPackage<>(arr, new TCPConnection(socket)));
+            }
+        } catch (EOFException e) {
+            System.out.println("Client closed the connection");
         } catch (IOException e) {
-            throw new RuntimeException("Couldn't read from TCP connection");
+            throw new RuntimeException(e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
             try {
                 socket.close();
-            } catch (IOException e) {}
+            } catch (IOException ignored) {}
         }
     }
 }

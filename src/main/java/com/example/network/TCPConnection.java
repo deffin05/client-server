@@ -1,7 +1,7 @@
 package com.example.network;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.Socket;
 
 public class TCPConnection implements Connection{
@@ -13,7 +13,8 @@ public class TCPConnection implements Connection{
 
     @Override
     public void sendResponse(byte[] arr) throws IOException {
-        OutputStream out = socket.getOutputStream();
+        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+        out.writeInt(arr.length);
         out.write(arr);
         out.flush();
     }

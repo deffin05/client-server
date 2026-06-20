@@ -2,12 +2,11 @@ package com.example.network;
 
 import com.example.Message;
 import com.example.Package;
-import com.example.decryptor.Decryptor;
 import com.example.decryptor.DefaultDecryptor;
 import com.example.encryptor.DefaultEncryptor;
 import com.example.encryptor.Encryptor;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 
@@ -51,12 +50,18 @@ public class StoreClientTCP {
                 connect();
             }
             try {
+                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                DataInputStream in = new DataInputStream(socket.getInputStream());
                 Encryptor encryptor = new DefaultEncryptor(null, null);
                 byte[] arr = encryptor.encrypt(pkg);
-                socket.getOutputStream().write(arr);
-                socket.getOutputStream().flush();
+                out.writeInt(arr.length);
+                out.write(arr);
+                out.flush();
 
-                byte[] response = socket.getInputStream().readAllBytes();
+                int responseLength = in.readInt();
+                byte[] response = new byte[responseLength];
+                in.readFully(response);
+
                 DefaultDecryptor decryptor = new DefaultDecryptor(null, null);
                 Package responsePkg = decryptor.decodeIntoPackage(response);
                 System.out.println("Received answer: " + responsePkg);
