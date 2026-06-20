@@ -17,8 +17,10 @@ public class DefaultProcessor implements Processor, Runnable {
     @Override
     public void run() {
         try {
-            Package inputPkg = inputQueue.take();
-            process(inputPkg);
+            while (!Thread.currentThread().isInterrupted()) {
+                Package inputPkg = inputQueue.take();
+                process(inputPkg);
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

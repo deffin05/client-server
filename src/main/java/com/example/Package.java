@@ -34,4 +34,13 @@ public class Package {
     public void setMessage(Message message) {
         this.message = message;
     }
+
+    @Override
+    public String toString() {
+        return "Package{" +
+                "bSrc=" + bSrc +
+                ", bPktId=" + bPktId +
+                ", message=" + message +
+                '}';
+    }
 }

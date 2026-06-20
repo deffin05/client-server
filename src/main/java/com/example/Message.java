@@ -34,4 +34,13 @@ public class Message {
     public void setMessage(String message) {
         this.message = message;
     }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "cType=" + cType +
+                ", bUserId=" + bUserId +
+                ", message='" + message + '\'' +
+                '}';
+    }
 }
