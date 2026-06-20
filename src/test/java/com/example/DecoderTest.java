@@ -11,8 +11,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class DecoderTest {
     private DefaultDecryptor decoder;
-    BlockingQueue<byte[]> inputQueue;
-    BlockingQueue<Package> outputQueue;
+    BlockingQueue<NetworkPackage<byte[]>> inputQueue;
+    BlockingQueue<NetworkPackage<Package>> outputQueue;
     private final byte[] VALID_ARRAY = new byte[]{
             0x13,                           // Magic number
             62,                             // Source
@@ -38,7 +38,7 @@ public class DecoderTest {
     @Test
     void testDecode() {
         assertDoesNotThrow(() -> decoder.decrypt(VALID_ARRAY));
-        Package decodedPackage = assertDoesNotThrow(() -> outputQueue.take());
+        Package decodedPackage = assertDoesNotThrow(() -> outputQueue.take().getData());
         Message decodedMessage = decodedPackage.getMessage();
 
         assertEquals(62, decodedPackage.getbSrc());

@@ -1,6 +1,7 @@
 package com.example.encryptor;
 
 import com.example.Crc16;
+import com.example.NetworkPackage;
 import com.example.Package;
 
 import javax.crypto.*;
@@ -13,10 +14,10 @@ import java.util.concurrent.BlockingQueue;
 
 public class DefaultEncryptor implements Encryptor, Runnable {
     private static final byte MAGIC_NUMBER = 0x13;
-    private final BlockingQueue<Package> inputQueue;
-    private final BlockingQueue<byte[]> outputQueue;
+    private final BlockingQueue<NetworkPackage<Package>> inputQueue;
+    private final BlockingQueue<NetworkPackage<byte[]>> outputQueue;
 
-    public DefaultEncryptor(BlockingQueue<Package> inputQueue, BlockingQueue<byte[]> outputQueue) {
+    public DefaultEncryptor(BlockingQueue<NetworkPackage<Package>> inputQueue, BlockingQueue<NetworkPackage<byte[]>> outputQueue) {
         this.inputQueue = inputQueue;
         this.outputQueue = outputQueue;
     }
@@ -26,9 +27,9 @@ public class DefaultEncryptor implements Encryptor, Runnable {
     public void run() {
         try {
             while (!Thread.currentThread().isInterrupted()) {
-                Package pkg = inputQueue.take();
-                byte[] encryptedPkg = encrypt(pkg);
-                outputQueue.put(encryptedPkg);
+                NetworkPackage<Package> pkg = inputQueue.take();
+                byte[] encryptedPkg = encrypt(pkg.getData());
+                outputQueue.put(new NetworkPackage<>(encryptedPkg, pkg.getConnection()));
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

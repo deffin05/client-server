@@ -2,9 +2,9 @@ package com.example;
 
 import com.example.decryptor.DefaultDecryptor;
 import com.example.encryptor.DefaultEncryptor;
+import com.example.network.StoreServerTCP;
 import com.example.processor.DefaultProcessor;
-import com.example.receiver.FakeReceiver;
-import com.example.sender.FakeSender;
+import com.example.sender.DefaultSender;
 
 import java.util.concurrent.*;
 
@@ -17,22 +17,17 @@ public class Pipeline {
 
     private ExecutorService executor;
 
-    public static void main(String[] args) {
-        Pipeline line = new Pipeline();
-        line.startPipeline();
-    }
-
     public void startPipeline() {
-        BlockingQueue<byte[]> receiverQueue = new LinkedBlockingQueue<>(50);
-        BlockingQueue<Package> decryptorQueue = new LinkedBlockingQueue<>(50);
-        BlockingQueue<Package> processorQueue = new LinkedBlockingQueue<>(50);
-        BlockingQueue<byte[]> encryptorQueue = new LinkedBlockingQueue<>(50);
+        BlockingQueue<NetworkPackage<byte[]>> receiverQueue = new LinkedBlockingQueue<>(50);
+        BlockingQueue<NetworkPackage<Package>> decryptorQueue = new LinkedBlockingQueue<>(50);
+        BlockingQueue<NetworkPackage<Package>> processorQueue = new LinkedBlockingQueue<>(50);
+        BlockingQueue<NetworkPackage<byte[]>> encryptorQueue = new LinkedBlockingQueue<>(50);
 
 
         executor = Executors.newFixedThreadPool(RECEIVERS + DECRYPTORS + PROCESSORS + ENCRYPTORS + SENDERS);
 
         for (int i = 0; i < RECEIVERS; i++) {
-            executor.submit(new FakeReceiver(receiverQueue));
+            executor.submit(new StoreServerTCP(receiverQueue));
         }
 
         for (int i = 0; i < DECRYPTORS; i++) {
@@ -48,7 +43,7 @@ public class Pipeline {
         }
 
         for (int i = 0; i < SENDERS; i++) {
-            executor.submit(new FakeSender(encryptorQueue));
+            executor.submit(new DefaultSender(encryptorQueue));
         }
 
 

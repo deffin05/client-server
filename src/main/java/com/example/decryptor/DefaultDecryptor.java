@@ -2,7 +2,9 @@ package com.example.decryptor;
 
 import com.example.Crc16;
 import com.example.Message;
+import com.example.NetworkPackage;
 import com.example.Package;
+import com.example.network.Connection;
 
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
@@ -12,12 +14,13 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.concurrent.BlockingQueue;
 
-public class    DefaultDecryptor implements Decryptor, Runnable{
+public class DefaultDecryptor implements Decryptor, Runnable{
     private static final byte MAGIC_NUMBER = 0x13;
-    private final BlockingQueue<byte[]> inputQueue;
-    private final BlockingQueue<Package> outputQueue;
+    private final BlockingQueue<NetworkPackage<byte[]>> inputQueue;
+    private final BlockingQueue<NetworkPackage<Package>> outputQueue;
+    private Connection conn;
 
-    public DefaultDecryptor(BlockingQueue<byte[]> inputQueue, BlockingQueue<Package> outputQueue) {
+    public DefaultDecryptor(BlockingQueue<NetworkPackage<byte[]>> inputQueue, BlockingQueue<NetworkPackage<Package>> outputQueue) {
         this.inputQueue = inputQueue;
         this.outputQueue = outputQueue;
     }
@@ -26,8 +29,9 @@ public class    DefaultDecryptor implements Decryptor, Runnable{
     public void run() {
         try {
             while (!Thread.currentThread().isInterrupted()) {
-                byte[] inputMessage = inputQueue.take();
-                decrypt(inputMessage);
+                NetworkPackage<byte[]> pkg = inputQueue.take();
+                conn = pkg.getConnection();
+                decrypt(pkg.getData());
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -36,10 +40,10 @@ public class    DefaultDecryptor implements Decryptor, Runnable{
 
     public void decrypt(byte[] arr) throws InterruptedException {
         Package pkg = decodeIntoPackage(arr);
-        outputQueue.put(pkg);
+        outputQueue.put(new NetworkPackage<>(pkg, conn));
     }
 
-    private Package decodeIntoPackage(byte[] arr) {
+    public Package decodeIntoPackage(byte[] arr) {
         if (arr == null || arr.length < 26)
             throw new IllegalArgumentException("The package in invalid");
 

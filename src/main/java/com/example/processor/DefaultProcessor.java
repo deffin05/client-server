@@ -1,15 +1,18 @@
 package com.example.processor;
 
 import com.example.Message;
+import com.example.NetworkPackage;
 import com.example.Package;
+import com.example.network.Connection;
 
 import java.util.concurrent.BlockingQueue;
 
 public class DefaultProcessor implements Processor, Runnable {
-    private final BlockingQueue<Package> inputQueue;
-    private final BlockingQueue<Package> outputQueue;
+    private final BlockingQueue<NetworkPackage<Package>> inputQueue;
+    private final BlockingQueue<NetworkPackage<Package>> outputQueue;
+    private Connection conn;
 
-    public DefaultProcessor(BlockingQueue<Package> inputQueue, BlockingQueue<Package> outputQueue) {
+    public DefaultProcessor(BlockingQueue<NetworkPackage<Package>> inputQueue, BlockingQueue<NetworkPackage<Package>> outputQueue) {
         this.inputQueue = inputQueue;
         this.outputQueue = outputQueue;
     }
@@ -18,8 +21,9 @@ public class DefaultProcessor implements Processor, Runnable {
     public void run() {
         try {
             while (!Thread.currentThread().isInterrupted()) {
-                Package inputPkg = inputQueue.take();
-                process(inputPkg);
+                NetworkPackage<Package> inputPkg = inputQueue.take();
+                conn = inputPkg.getConnection();
+                process(inputPkg.getData());
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -29,7 +33,7 @@ public class DefaultProcessor implements Processor, Runnable {
     @Override
     public void process(Package pkg) throws InterruptedException {
         Package outputPkg = doProcess(pkg);
-        outputQueue.put(outputPkg);
+        outputQueue.put(new NetworkPackage<>(outputPkg, conn));
     }
 
     private Package doProcess(Package pkg) {
