@@ -6,8 +6,13 @@ import com.example.decryptor.DefaultDecryptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 public class DecoderTest {
     private DefaultDecryptor decoder;
+    BlockingQueue<byte[]> inputQueue;
+    BlockingQueue<Package> outputQueue;
     private final byte[] VALID_ARRAY = new byte[]{
             0x13,                           // Magic number
             62,                             // Source
@@ -25,12 +30,15 @@ public class DecoderTest {
 
     @BeforeEach
     void setup() {
-        decoder = new DefaultDecryptor();
+        inputQueue = new LinkedBlockingQueue<>();
+        outputQueue = new LinkedBlockingQueue<>();
+        decoder = new DefaultDecryptor(inputQueue, outputQueue);
     }
 
     @Test
     void testDecode() {
-        Package decodedPackage = assertDoesNotThrow(() -> decoder.decode(VALID_ARRAY));
+        assertDoesNotThrow(() -> decoder.decrypt(VALID_ARRAY));
+        Package decodedPackage = assertDoesNotThrow(() -> outputQueue.take());
         Message decodedMessage = decodedPackage.getMessage();
 
         assertEquals(62, decodedPackage.getbSrc());
@@ -46,7 +54,7 @@ public class DecoderTest {
         byte[] invalid_array = VALID_ARRAY.clone();
         invalid_array[0] = 0x3F;
 
-        assertThrows(Exception.class, () -> decoder.decode(invalid_array));
+        assertThrows(RuntimeException.class, () -> decoder.decrypt(invalid_array));
     }
 
     @Test
@@ -54,7 +62,7 @@ public class DecoderTest {
         byte[] invalid_array = VALID_ARRAY.clone();
         invalid_array[14] = 0;
 
-        assertThrows(Exception.class, () -> decoder.decode(invalid_array));
+        assertThrows(RuntimeException.class, () -> decoder.decrypt(invalid_array));
     }
 
     @Test
@@ -62,6 +70,6 @@ public class DecoderTest {
         byte[] invalid_array = VALID_ARRAY.clone();
         invalid_array[invalid_array.length - 1] = 0;
 
-        assertThrows(Exception.class, () -> decoder.decode(invalid_array));
+        assertThrows(RuntimeException.class, () -> decoder.decrypt(invalid_array));
     }
 }

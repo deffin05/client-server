@@ -10,11 +10,36 @@ import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.concurrent.BlockingQueue;
 
-public class DefaultDecryptor implements Decryptor{
+public class    DefaultDecryptor implements Decryptor, Runnable{
     private static final byte MAGIC_NUMBER = 0x13;
+    private final BlockingQueue<byte[]> inputQueue;
+    private final BlockingQueue<Package> outputQueue;
 
-    public void decrypt(byte[] arr) {
+    public DefaultDecryptor(BlockingQueue<byte[]> inputQueue, BlockingQueue<Package> outputQueue) {
+        this.inputQueue = inputQueue;
+        this.outputQueue = outputQueue;
+    }
+
+    @Override
+    public void run() {
+        try {
+            while (!Thread.currentThread().isInterrupted()) {
+                byte[] inputMessage = inputQueue.take();
+                decrypt(inputMessage);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public void decrypt(byte[] arr) throws InterruptedException {
+        Package pkg = decodeIntoPackage(arr);
+        outputQueue.put(pkg);
+    }
+
+    private Package decodeIntoPackage(byte[] arr) {
         if (arr == null || arr.length < 26)
             throw new IllegalArgumentException("The package in invalid");
 
@@ -46,7 +71,7 @@ public class DefaultDecryptor implements Decryptor{
         if (msgCrcReceived != msgCrcCalculated)
             throw new RuntimeException("Message CRC does not match.");
 
-        Package result = new Package(bSrc, bPktId, new Message(cType, bUserId, message));
+        return new Package(bSrc, bPktId, new Message(cType, bUserId, message));
     }
 
     private String decipher(byte[] arr) {

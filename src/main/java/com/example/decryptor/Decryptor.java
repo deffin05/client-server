@@ -1,5 +1,5 @@
 package com.example.decryptor;
 
 public interface Decryptor {
-    void decrypt(byte[] message);
+    void decrypt(byte[] message) throws InterruptedException;
 }
