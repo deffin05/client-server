@@ -31,7 +31,7 @@ public class FakeReceiver implements Receiver, Runnable {
 
     @Override
     public void receiveMessage() throws InterruptedException {
-        Thread.sleep(300 + ThreadLocalRandom.current().nextInt(0, 200));
+        Thread.sleep(200 + ThreadLocalRandom.current().nextInt(0, 500));
         byte[] message = doReceiveMessage();
         outputQueue.put(message);
     }

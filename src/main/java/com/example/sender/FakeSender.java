@@ -10,12 +10,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class FakeSender implements Sender, Runnable {
     private final BlockingQueue<byte[]> inputQueue;
     private final BlockingQueue<Package> printQueue;
-    private DefaultDecryptor decryptor;
+    private final DefaultDecryptor decryptor;
 
     public FakeSender(BlockingQueue<byte[]> inputQueue) {
         this.inputQueue = inputQueue;
         this.printQueue = new LinkedBlockingQueue<>();
-        DefaultDecryptor decryptor = new DefaultDecryptor(null, printQueue);
+        decryptor = new DefaultDecryptor(null, printQueue);
     }
     @Override
     public void run() {
