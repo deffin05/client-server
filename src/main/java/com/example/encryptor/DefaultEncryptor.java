@@ -31,7 +31,7 @@ public class DefaultEncryptor implements Encryptor, Runnable {
                 outputQueue.put(encryptedPkg);
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
         }
     }
 
