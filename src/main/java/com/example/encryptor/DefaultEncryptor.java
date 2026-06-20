@@ -9,15 +9,40 @@ import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.concurrent.BlockingQueue;
 
-public class DefaultEncryptor {
-    public byte[] encode(Package pkg) {
-        byte[] encryptedMessage = encrypt(pkg.getMessage().getMessage());
+public class DefaultEncryptor implements Encryptor, Runnable {
+    private static final byte MAGIC_NUMBER = 0x13;
+    private final BlockingQueue<Package> inputQueue;
+    private final BlockingQueue<byte[]> outputQueue;
+
+    public DefaultEncryptor(BlockingQueue<Package> inputQueue, BlockingQueue<byte[]> outputQueue) {
+        this.inputQueue = inputQueue;
+        this.outputQueue = outputQueue;
+    }
+
+
+    @Override
+    public void run() {
+        try {
+            while (!Thread.currentThread().isInterrupted()) {
+                Package pkg = inputQueue.take();
+                byte[] encryptedPkg = encrypt(pkg);
+                outputQueue.put(encryptedPkg);
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public byte[] encrypt(Package pkg) {
+        byte[] encryptedMessage = applyCipher(pkg.getMessage().getMessage());
         int msgLength = encryptedMessage.length + 4 + 4;
         int length = 1 + 1 + 8 + 4 + 2 + 2 + msgLength;
         ByteBuffer buffer = ByteBuffer.allocate(length);
 
-        buffer.put((byte) 0x13);
+        buffer.put(MAGIC_NUMBER);
         buffer.put(pkg.getbSrc());
         buffer.putLong(pkg.getbPktId());
         buffer.putInt(msgLength);
@@ -34,7 +59,7 @@ public class DefaultEncryptor {
         return buffer.array();
     }
 
-    private byte[] encrypt(String message) {
+    private byte[] applyCipher(String message) {
         String KEY_BASE64 = "3pK22raz7n2/lyedxsQP2g==";
 
         try {

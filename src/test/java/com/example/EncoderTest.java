@@ -25,7 +25,7 @@ class EncoderTest {
 
     @BeforeEach
     void setup() {
-        encoder = new DefaultEncryptor();
+        encoder = new DefaultEncryptor(null, null);
     }
 
     @Test
@@ -33,7 +33,7 @@ class EncoderTest {
         Message message = new Message(3, 127, "321test");
         Package pkg = new Package((byte) 62, 100, message);
 
-        byte[] encoded = encoder.encode(pkg);
+        byte[] encoded = encoder.encrypt(pkg);
         assertArrayEquals(VALID_ARRAY, encoded);
     }
 }
