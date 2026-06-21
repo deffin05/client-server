@@ -9,15 +9,29 @@ import com.example.encryptor.Encryptor;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class StoreClientTCP {
+public class StoreClientTCP extends Thread {
     private Socket socket;
+    private static AtomicInteger last_id = new AtomicInteger(1);
+    private int id;
     boolean isConnected = false;
 
-    public static void main(String[] args) {
-        StoreClientTCP client = new StoreClientTCP();
+    public static void main(String[] args) throws InterruptedException {
+        for (int i = 0; i < 10; i++) {
+            StoreClientTCP client = new StoreClientTCP();
+            client.start();
+        }
+    }
 
-        client.send(new Package((byte) 1, 500L, new Message(1, 23, "")));
+    @Override
+    public void run() {
+        id = last_id.incrementAndGet();
+        for (int i = 0; i < 20; i++) {
+            Package response = send(new Package((byte) 1, i, new Message(1, id, "")));
+        }
+        close();
     }
 
     public void connect() {
@@ -31,7 +45,8 @@ public class StoreClientTCP {
                 System.out.println("Connected to TCP: " + socket);
             } catch (IOException e) {
                 if (retries >= 2) {
-                    System.err.println("Connection failed");
+                    System.err.println("Connection failed, reattempts failed.");
+                    Thread.currentThread().interrupt();
                     break;
                 }
                 System.err.println("Connection to TCP failed, retry in 5 seconds #" + ++retries);
@@ -44,7 +59,7 @@ public class StoreClientTCP {
         }
     }
 
-    public void send(Package pkg) {
+    public Package send(Package pkg) {
         while (true) {
             if (!isConnected) {
                 connect();
@@ -63,17 +78,17 @@ public class StoreClientTCP {
                 in.readFully(response);
 
                 DefaultDecryptor decryptor = new DefaultDecryptor(null, null);
-                Package responsePkg = decryptor.decodeIntoPackage(response);
-                System.out.println("Received answer: " + responsePkg);
-                break;
+                return decryptor.decodeIntoPackage(response);
             } catch (IOException e) {
+                isConnected = false;
                 System.err.println("Failed to send data, reconnecting");
-            } finally {
-                try {
-                    socket.close();
-                } catch (IOException ignored) {
-                }
             }
         }
+    }
+
+    public void close() {
+        try {
+            socket.close();
+        } catch (IOException ignored) {}
     }
 }

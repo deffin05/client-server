@@ -3,19 +3,21 @@ package com.example;
 import com.example.decryptor.DefaultDecryptor;
 import com.example.encryptor.DefaultEncryptor;
 import com.example.network.StoreServerTCP;
+import com.example.network.StoreServerUDP;
 import com.example.processor.DefaultProcessor;
 import com.example.sender.DefaultSender;
 
 import java.util.concurrent.*;
 
 public class Pipeline {
-    private static final int RECEIVERS = 2;
     private static final int DECRYPTORS = 2;
     private static final int PROCESSORS = 1;
     private static final int ENCRYPTORS = 5;
     private static final int SENDERS = 2;
 
     private ExecutorService executor;
+    private StoreServerTCP tcpServer;
+    private StoreServerUDP udpServer;
 
     public void startPipeline() {
         BlockingQueue<NetworkPackage<byte[]>> receiverQueue = new LinkedBlockingQueue<>(50);
@@ -24,11 +26,12 @@ public class Pipeline {
         BlockingQueue<NetworkPackage<byte[]>> encryptorQueue = new LinkedBlockingQueue<>(50);
 
 
-        executor = Executors.newFixedThreadPool(RECEIVERS + DECRYPTORS + PROCESSORS + ENCRYPTORS + SENDERS);
+        executor = Executors.newFixedThreadPool(2 + DECRYPTORS + PROCESSORS + ENCRYPTORS + SENDERS);
 
-        for (int i = 0; i < RECEIVERS; i++) {
-            executor.submit(new StoreServerTCP(receiverQueue));
-        }
+        tcpServer = new StoreServerTCP(receiverQueue);
+        udpServer = new StoreServerUDP(receiverQueue);
+        executor.submit(tcpServer);
+        executor.submit(udpServer);
 
         for (int i = 0; i < DECRYPTORS; i++) {
             executor.submit(new DefaultDecryptor(receiverQueue, decryptorQueue));
@@ -46,15 +49,16 @@ public class Pipeline {
             executor.submit(new DefaultSender(encryptorQueue));
         }
 
-
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdownPipeline));
     }
 
     public void shutdownPipeline() {
-        executor.shutdownNow();
+        executor.shutdown();
+        tcpServer.close();
+        udpServer.close();
         System.out.println("The pipeline has been shutdown");
         try {
-            executor.awaitTermination(2, TimeUnit.SECONDS);
+            if (!executor.awaitTermination(2, TimeUnit.SECONDS)) executor.shutdownNow();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

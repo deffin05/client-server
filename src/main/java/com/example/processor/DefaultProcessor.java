@@ -69,6 +69,7 @@ public class DefaultProcessor implements Processor, Runnable {
             default:
                 outputMessage = "Unknown command";
         }
+        outputMessage = "OK";
         return new Package(pkg.getbSrc(), pkg.getbPktId(),
                 new Message(pkg.getMessage().getcType(), pkg.getMessage().getbUserId(), outputMessage));
     }
