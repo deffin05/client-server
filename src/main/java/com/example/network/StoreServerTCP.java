@@ -8,6 +8,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,7 +37,11 @@ public class StoreServerTCP implements Runnable, Receiver {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     receiveMessage();
-                } catch (IOException e) {
+                } catch (SocketException e) {
+                    System.out.println("TCP socket has been shutdown");
+                    break;
+                }
+                catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }

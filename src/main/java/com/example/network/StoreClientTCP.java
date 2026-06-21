@@ -18,7 +18,7 @@ public class StoreClientTCP extends Thread {
     private int id;
     boolean isConnected = false;
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         for (int i = 0; i < 10; i++) {
             StoreClientTCP client = new StoreClientTCP();
             client.start();
@@ -30,6 +30,7 @@ public class StoreClientTCP extends Thread {
         id = last_id.incrementAndGet();
         for (int i = 0; i < 20; i++) {
             Package response = send(new Package((byte) 1, i, new Message(1, id, "")));
+            System.out.println("Received response: " + response);
         }
         close();
     }
