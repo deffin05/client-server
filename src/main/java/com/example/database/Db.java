@@ -23,8 +23,8 @@ public class Db {
         List<Object> params = new ArrayList<>();
         List<String> filterStrings = new ArrayList<>();
         if (filters.getName() != null) {
-            filterStrings.add("name LIKE %?%");
-            params.add(filters.getName());
+            filterStrings.add("name LIKE ?");
+            params.add("%" + filters.getName() + "%");
         }
         if (filters.getPriceFrom() != null) {
             filterStrings.add("price >= ?");
@@ -43,10 +43,11 @@ public class Db {
             params.add(filters.getRemainderTo());
         }
         if (filters.getCategory() != null) {
-            filterStrings.add("category LIKE %?%");
-            params.add(filters.getCategory());
+            filterStrings.add("category LIKE ?");
+            params.add("%" + filters.getCategory() + "%");
         }
-        subquery = " WHERE " + String.join(" AND ", filterStrings);
+        if (!filterStrings.isEmpty())
+            subquery = " WHERE " + String.join(" AND ", filterStrings);
 
         try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM Product" + subquery)) {
             for (int i = 0; i < params.size(); i++) {
@@ -94,7 +95,9 @@ public class Db {
             }
 
             ResultSet generatedKeys = ps.getGeneratedKeys();
-            return generatedKeys.getInt(1);
+            if (generatedKeys.next())
+                return generatedKeys.getInt(1);
+            return -1;
         } catch (SQLException e) {
             throw new RuntimeException("Couldn't insert product: " + product, e);
         }
@@ -127,6 +130,26 @@ public class Db {
         }
     }
 
+    public int count() {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT COUNT(*) FROM Product")) {
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+                return -1;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Couldn't count products", e);
+        }
+    }
+
+    public void deleteAll() {
+        try (PreparedStatement ps = connection.prepareStatement("DELETE FROM Product")) {
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Couldn't delete products", e);
+        }
+    }
 
     private void init() {
         try (Statement statement = connection.createStatement()) {
