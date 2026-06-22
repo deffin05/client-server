@@ -7,6 +7,8 @@ public class Product {
     private double price;
     private String category;
 
+    public Product(){}
+
     public Product(String name, int remainder, double price, String category) {
         this(null, name, remainder, price, category);
     }

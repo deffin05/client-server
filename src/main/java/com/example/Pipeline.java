@@ -5,6 +5,7 @@ import com.example.decryptor.DefaultDecryptor;
 import com.example.encryptor.DefaultEncryptor;
 import com.example.network.StoreServerTCP;
 import com.example.network.StoreServerUDP;
+import com.example.network.http.StoreServerHTTP;
 import com.example.processor.DefaultProcessor;
 import com.example.sender.DefaultSender;
 
@@ -19,6 +20,7 @@ public class Pipeline {
     private ExecutorService executor;
     private StoreServerTCP tcpServer;
     private StoreServerUDP udpServer;
+    private Thread httpThread;
 
     public void startPipeline() {
         BlockingQueue<NetworkPackage<byte[]>> receiverQueue = new LinkedBlockingQueue<>(50);
@@ -34,6 +36,10 @@ public class Pipeline {
         udpServer = new StoreServerUDP(receiverQueue);
         executor.submit(tcpServer);
         executor.submit(udpServer);
+
+        StoreServerHTTP httpServer = new StoreServerHTTP(database);
+        httpThread = new Thread(httpServer);
+        httpThread.start();
 
         for (int i = 0; i < DECRYPTORS; i++) {
             executor.submit(new DefaultDecryptor(receiverQueue, decryptorQueue));
@@ -58,6 +64,7 @@ public class Pipeline {
         executor.shutdown();
         tcpServer.close();
         udpServer.close();
+        httpThread.interrupt();
         System.out.println("The pipeline has been shutdown");
         try {
             if (!executor.awaitTermination(2, TimeUnit.SECONDS)) executor.shutdownNow();
