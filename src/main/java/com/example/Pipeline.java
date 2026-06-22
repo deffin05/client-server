@@ -1,5 +1,6 @@
 package com.example;
 
+import com.example.database.Db;
 import com.example.decryptor.DefaultDecryptor;
 import com.example.encryptor.DefaultEncryptor;
 import com.example.network.StoreServerTCP;
@@ -25,6 +26,7 @@ public class Pipeline {
         BlockingQueue<NetworkPackage<Package>> processorQueue = new LinkedBlockingQueue<>(50);
         BlockingQueue<NetworkPackage<byte[]>> encryptorQueue = new LinkedBlockingQueue<>(50);
 
+        Db database = new Db("warehouse.db");
 
         executor = Executors.newFixedThreadPool(2 + DECRYPTORS + PROCESSORS + ENCRYPTORS + SENDERS);
 
@@ -38,7 +40,7 @@ public class Pipeline {
         }
 
         for (int i = 0; i < PROCESSORS; i++) {
-            executor.submit(new DefaultProcessor(decryptorQueue, processorQueue));
+            executor.submit(new DefaultProcessor(decryptorQueue, processorQueue, database));
         }
 
         for (int i = 0; i < ENCRYPTORS; i++) {

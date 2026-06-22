@@ -21,34 +21,33 @@ public class Db {
     public List<Product> getAll(ProductFilters filters) {
         String subquery = "";
         List<Object> params = new ArrayList<>();
-        if (filters != null) {
-            List<String> filterStrings = new ArrayList<>();
-            if (filters.getName() != null) {
-                filterStrings.add("name LIKE %?%");
-                params.add(filters.getName());
-            }
-            if (filters.getPriceFrom() != null) {
-                filterStrings.add("price >= ?");
-                params.add(filters.getPriceFrom());
-            }
-            if (filters.getPriceTo() != null) {
-                filterStrings.add("price <= ?");
-                params.add(filters.getPriceTo());
-            }
-            if (filters.getRemainderFrom() != null) {
-                filterStrings.add("remainder >= ?");
-                params.add(filters.getRemainderFrom());
-            }
-            if (filters.getRemainderTo() != null) {
-                filterStrings.add("remainder <= ?");
-                params.add(filters.getRemainderTo());
-            }
-            if (filters.getCategory() != null) {
-                filterStrings.add("category LIKE %?%");
-                params.add(filters.getCategory());
-            }
-            subquery = " WHERE " + String.join(" AND ", filterStrings);
+        List<String> filterStrings = new ArrayList<>();
+        if (filters.getName() != null) {
+            filterStrings.add("name LIKE %?%");
+            params.add(filters.getName());
         }
+        if (filters.getPriceFrom() != null) {
+            filterStrings.add("price >= ?");
+            params.add(filters.getPriceFrom());
+        }
+        if (filters.getPriceTo() != null) {
+            filterStrings.add("price <= ?");
+            params.add(filters.getPriceTo());
+        }
+        if (filters.getRemainderFrom() != null) {
+            filterStrings.add("remainder >= ?");
+            params.add(filters.getRemainderFrom());
+        }
+        if (filters.getRemainderTo() != null) {
+            filterStrings.add("remainder <= ?");
+            params.add(filters.getRemainderTo());
+        }
+        if (filters.getCategory() != null) {
+            filterStrings.add("category LIKE %?%");
+            params.add(filters.getCategory());
+        }
+        subquery = " WHERE " + String.join(" AND ", filterStrings);
+
         try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM Product" + subquery)) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i+1, params.get(i));
