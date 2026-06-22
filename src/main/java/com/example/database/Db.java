@@ -46,12 +46,15 @@ public class Db {
             filterStrings.add("category LIKE ?");
             params.add("%" + filters.getCategory() + "%");
         }
+
+
         if (!filterStrings.isEmpty())
             subquery = " WHERE " + String.join(" AND ", filterStrings);
 
-        try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM Product" + subquery)) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT * FROM Product" + subquery + " LIMIT 50 OFFSET " + (filters.getPage() - 1) * 50)) {
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i+1, params.get(i));
+                ps.setObject(i + 1, params.get(i));
             }
             List<Product> products = new ArrayList<>();
             try (ResultSet rs = ps.executeQuery()) {

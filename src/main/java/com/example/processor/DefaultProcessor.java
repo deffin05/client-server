@@ -131,6 +131,9 @@ public class DefaultProcessor implements Processor, Runnable {
                 case "category":
                     filterObject.setCategory(pair[1]);
                     break;
+                case "page":
+                    filterObject.setPage(Integer.parseInt(pair[1]));
+                    break;
             }
         }
         return filterObject;

@@ -153,4 +153,22 @@ public class DatabaseTest {
             assertEquals("white bread", results.getFirst().getName());
         }
     }
+
+    @Test
+    void testPagination() {
+        Product product = new Product("milk", 15, 34.99, "milk products");
+
+        for (int i = 0; i < 101; i++) {
+            db.insert(product);
+        }
+        assertEquals(101, db.count());
+
+        ProductFilters filters = new ProductFilters();
+        List<Product> first_page = db.getAll(filters);
+        assertEquals(50, first_page.size());
+
+        filters.setPage(3);
+        List<Product> third_page = db.getAll(filters);
+        assertEquals(1, third_page.size());
+    }
 }

@@ -7,6 +7,7 @@ public class ProductFilters {
     private Double priceFrom;
     private Double priceTo;
     private String category;
+    private int page = 1;
 
     public String getName() {
         return name;
@@ -54,5 +55,13 @@ public class ProductFilters {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public int getPage() {
+        return page;
+    }
+
+    public void setPage(int page) {
+        this.page = page;
     }
 }
