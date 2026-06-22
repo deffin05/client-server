@@ -154,6 +154,48 @@ public class Db {
         }
     }
 
+    public Optional<UserCredentials> getUser(String username) {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM User WHERE username = ?")) {
+            ps.setString(1, username);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(new UserCredentials(rs.getString("username"), rs.getString("password")));
+                }
+            }
+            return Optional.empty();
+        } catch (SQLException e) {
+            throw new RuntimeException("Couldn't get user by username: " + username, e);
+        }
+    }
+
+    public int insertUser(String username, String password) {
+        try (PreparedStatement ps = connection.prepareStatement("INSERT INTO User (username, password) VALUES (?, ?)",
+                Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, username);
+            ps.setString(2, password);
+            int inserted = ps.executeUpdate();
+
+            if (inserted < 1) {
+                throw new RuntimeException("Insert failed");
+            }
+
+            ResultSet generatedKeys = ps.getGeneratedKeys();
+            if (generatedKeys.next())
+                return generatedKeys.getInt(1);
+            return -1;
+        } catch (SQLException e) {
+            throw new RuntimeException("Couldn't insert user: " + username, e);
+        }
+    }
+
+    public void close() {
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            System.err.println("Failed to close the connection");
+        }
+    }
+
     private void init() {
         try (Statement statement = connection.createStatement()) {
             statement.execute("""
@@ -163,6 +205,12 @@ public class Db {
                         remainder INTEGER NOT NULL,
                         price DECIMAL(13, 2),
                         category VARCHAR(50)
+                    )""");
+            statement.execute("""
+                    CREATE TABLE IF NOT EXISTS User (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username VARCHAR(50) NOT NULL UNIQUE,
+                        password VARCHAR(50) NOT NULL
                     )""");
         } catch (SQLException e) {
             throw new RuntimeException(e);

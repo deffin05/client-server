@@ -2,11 +2,14 @@ package com.example;
 
 import com.example.database.Db;
 
-import java.util.Arrays;
-
 public class Main {
     public static void main(String[] args) {
-//        Pipeline line = new Pipeline();
-//        line.startPipeline();
+        // Create user
+//        Db db = new Db("warehouse.db");
+//        db.insertUser("root", "root");
+//        db.close();
+
+        Pipeline line = new Pipeline();
+        line.startPipeline();
     }
 }
