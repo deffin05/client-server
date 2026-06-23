@@ -152,6 +152,11 @@ public class Db {
         } catch (SQLException e) {
             throw new RuntimeException("Couldn't delete products", e);
         }
+        try (PreparedStatement ps = connection.prepareStatement("DELETE FROM User")) {
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Couldn't delete users", e);
+        }
     }
 
     public Optional<UserCredentials> getUser(String username) {

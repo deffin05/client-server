@@ -166,7 +166,7 @@ public class StoreServerHTTP implements Runnable {
                         boolean isUpdated = db.update(updatedProduct);
 
                         if (isUpdated) {
-                            sendResponse(exchange, 200, "{\"message\": \"Product updated successfully\"}");
+                            sendResponse(exchange, 200, mapper.writeValueAsString(updatedProduct));
                         } else {
                             sendResponse(exchange, 500, "{\"error\": \"Failed to update product.\"}");
                         }
@@ -198,6 +198,10 @@ public class StoreServerHTTP implements Runnable {
         productContext.setAuthenticator(new JWTAuthenticator());
 
         server.start();
+    }
+
+    public void stop() {
+        server.stop(0);
     }
 
     private static void sendResponse(HttpExchange exchange, int statusCode, String responseJson) throws IOException {

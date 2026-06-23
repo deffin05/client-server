@@ -20,7 +20,7 @@ public class Pipeline {
     private ExecutorService executor;
     private StoreServerTCP tcpServer;
     private StoreServerUDP udpServer;
-    private Thread httpThread;
+    private StoreServerHTTP httpServer;
 
     public void startPipeline() {
         BlockingQueue<NetworkPackage<byte[]>> receiverQueue = new LinkedBlockingQueue<>(50);
@@ -37,8 +37,8 @@ public class Pipeline {
         executor.submit(tcpServer);
         executor.submit(udpServer);
 
-        StoreServerHTTP httpServer = new StoreServerHTTP(database);
-        httpThread = new Thread(httpServer);
+        httpServer = new StoreServerHTTP(database);
+        Thread httpThread = new Thread(httpServer);
         httpThread.start();
 
         for (int i = 0; i < DECRYPTORS; i++) {
@@ -64,7 +64,7 @@ public class Pipeline {
         executor.shutdown();
         tcpServer.close();
         udpServer.close();
-        httpThread.interrupt();
+        httpServer.stop();
         System.out.println("The pipeline has been shutdown");
         try {
             if (!executor.awaitTermination(2, TimeUnit.SECONDS)) executor.shutdownNow();
